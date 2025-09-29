@@ -1,0 +1,111 @@
+/**
+ * Title: "Comptine d’un autre été: L’après-midi"
+ * Original composer: Yann Tiersen (2001)
+ *
+ * Copyright / Usage Notice:
+ * - This file contains a non-commercial study/arrangement of the above work.
+ * - All rights in the original composition remain with the respective rightsholders.
+ * - No original recordings are included; this code only generates synthesized notes/patterns.
+ * - Use is limited to private/educational purposes. Public performance, distribution,
+ *   or commercial use may require permission/licensing from the rightsholders
+ *   (e.g., publisher/collecting society).
+ *
+ * Credits (this arrangement):
+ * - Programming/Arrangement: Tristan Cebulla (2025)
+ * - Tools: Strudel (Tidal-style live coding in JS)
+ *
+ * Code License (optional, applies to code only — not the musical work):
+ * - MIT License. Music rights unaffected.
+ *
+ * Contact:
+ * - strudel+comptine@lichtspiele.org
+ */
+
+// Settings 
+const tempo = 100             // 100 (integer) - original tempo
+const scale_str = 'e3:minor'  // e3:minor (string - use single quotes!) - original scale
+
+
+/* There is nothing for you to change below this line */
+function transposeScale(scale, octShift = 1) {
+  return scale.replace(/([a-g][b#]?)(\d+)/, (m, note, oct) => note + (parseInt(oct) + octShift)) ;
+}
+
+setcps(tempo/60/4)
+const scale = seq(scale_str)
+//const right_scale=seq(transposeScale(scale_str))
+const right_scale="e4:minor"
+
+/* Left hand */
+const left_hand = stack(
+  "<0@1 1@3>".pick(["7", "6"]).scale(scale).note().struct("<x ~ x ~ x ~ x ~>*8").gain("<.7 .4 .4 .4>*4"),
+  "<0@3 1@1>".pick(["4", "3"]).scale(scale).note().struct("<~ x ~ x ~ x ~ x>*8").gain(.7),
+  "<0@2 1@2>".pick(["2", "1"]).scale(scale).note().struct("<~ x ~ x>*4").gain(.6),
+  "<0@1 1@3>".pick(["0", "-1"]).scale(scale).note().struct("<x ~ x ~>*4").gain(.7)
+)
+
+/* Right hand */
+const rh1 = n(`<~ [2 1] 2 [4 5] 4@4
+              ~ [1 2] 1 [2 3] 2@4
+              ~ [1 0] 1 [4 5] 4@4
+              ~ [1 0] 1@6>*8`)
+const rh2 = n("<7@3 4@5 6@3 4@5 8@3 4@5 8@3 3@5>*8")
+const rh3 = stack(
+  n(`<9@3 7@5 9@3 6@5 8@3 6@5 8@3 6@5>*8`),
+  n(`<4@3 2@5 4@3 2@5 4@3 1@5 3@3 1@5>*8`)
+)
+const rh4 = n(`<4 7 11 4 7 11 4 7 11 4 7 11 4 7 5 7
+                4 6 11 4 6 11 4 6 11 4 6 11 4 6 3 6
+                1 4 6 1 4 6 1 4 6 1 4 6 1 4 2 4>*16`)
+const rh4_1 = n("<3 6 10 3 6 10 3 6 10 3 6 10 3 6 2 6>*16")
+const rh4_2 = n("<3 6 10 3 6 10 3 6 10 3 6 10 3 6 10@2>*16")
+const rh4_3 = n("<3 6 10 3 6 10 3 6 10 3 6 10 3 6 10 9>*16")
+const rh5 = stack(
+  n("0").late(.12).scale(right_scale).transpose(12), 
+  n("2").late(.15).scale(right_scale).transpose(12), 
+  n("4").late(.18).scale(right_scale).transpose(12)
+)
+
+/* Arrangement */
+$piano: stack(
+    arrange(
+      [1, silence],
+      [52, left_hand],
+      [1, stack(
+        "<0>".scale(scale).note(), 
+        "<4>".scale(scale).note().late(.03), 
+        "<7>".scale(scale).note().late(.06), 
+        "<9>".scale(scale).note().late(.09)
+      ).gain("<.4>*1") ],
+      [2, silence]
+    )
+      .velocity(.6).sustain(.7).pan(.25)
+    ,  
+    arrange(
+      [5, silence], 
+      [8, rh1], 
+      [4, rh2],
+      [4, rh3],
+      [3, rh4], [1, rh4_1], [3, rh4], [1, rh4_2],
+      [8, rh1.transpose(12)],
+      [4, rh2.transpose(12)],
+      [4, rh3.transpose(12)],
+      [3, rh4.transpose(12)], [1, rh4_1.transpose(12)], [3, rh4.transpose(12)], [1, rh4_3.transpose(12)],
+      [1, rh5],
+      [2, silence]
+  )
+    .scale(right_scale)  
+    .gain(.9).velocity(.8).sustain(.5).pan(.75)
+  )
+  .s("piano")
+    .room(.7).rsize(5)
+    ._pianoroll()
+
+/* Tempo adjustment */
+all(x => x.cps(
+  seq(tempo).sub(
+    "<0@51.5 1@1.5 2@3>".pickRestart([
+      "0", run(55).slow(1.5), "0"
+    ])
+  ).div(60*4)
+))
